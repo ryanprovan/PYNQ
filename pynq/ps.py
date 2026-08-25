@@ -359,15 +359,17 @@ class _ClocksMeta(type):
         The CPU, and other source clocks, by default, should not get changed.
 
         Users have three options:
-        1. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
-        2. specify the two frequency divider values directly (div0, div1), or
-        3. specify the clock rate, in which case the divider values will be
+        1. specify the two frequency divider values directly (div0, div1), or
+        2. specify the clock rate, in which case the divider values will be
         calculated.
+        3. pass a `clock_dict` entry, from which each architecture takes the
+        divisors and clock source it needs.,
 
         Note
         ----
-        A `clk_cfg` divisor takes precedence over `div0` and `div1`.
+        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
+        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
+        `div1`.
 
         Parameters
         ----------
@@ -440,15 +442,18 @@ class _ClocksBase:
         The CPU, and other source clocks, by default, should not get changed.
 
         Users have three options:
-        1. pass a `clock_dict` entry, from which each architecture takes the
+        1. specify the two frequency divider values directly (div0, div1), or
+        2. specify the clock rate, in which case the divider values will be
+        calculated.
+        3. pass a `clock_dict` entry, from which each architecture takes the
         divisors and clock source it needs.,
-        2. specify the two frequency divider values directly (div0, div1), or
-        3. specify the clock rate, in which case the divider values will be
         calculated.
 
         Note
         ----
-        A `clk_cfg` divisor takes precedence over `div0` and `div1`.
+        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
+        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
+        `div1`.
 
         Parameters
         ----------
@@ -620,15 +625,18 @@ class _ClocksUltrascale(_ClocksBase):
         The CPU, and other source clocks, by default, should not get changed.
 
         Users have three options:
-        1. pass a `clock_dict` entry, from which each architecture takes the
+        1. specify the two frequency divider values directly (div0, div1), or
+        2. specify the clock rate, in which case the divider values will be
+        calculated.
+        3. pass a `clock_dict` entry, from which each architecture takes the
         divisors and clock source it needs.,
-        2. specify the two frequency divider values directly (div0, div1), or
-        3. specify the clock rate, in which case the divider values will be
         calculated.
 
         Note
         ----
-        A `clk_cfg` divisor takes precedence over `div0` and `div1`.
+        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
+        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
+        `div1`.
 
         Parameters
         ----------
@@ -744,15 +752,18 @@ class _ClocksZynq(_ClocksBase):
         The CPU, and other source clocks, by default, should not get changed.
 
         Users have three options:
-        1. pass a `clock_dict` entry, from which each architecture takes the
+        1. specify the two frequency divider values directly (div0, div1), or
+        2. specify the clock rate, in which case the divider values will be
+        calculated.
+        3. pass a `clock_dict` entry, from which each architecture takes the
         divisors and clock source it needs.,
-        2. specify the two frequency divider values directly (div0, div1), or
-        3. specify the clock rate, in which case the divider values will be
         calculated.
 
         Note
         ----
-        A `clk_cfg` divisor takes precedence over `div0` and `div1`.
+        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
+        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
+        `div1`.
 
         Parameters
         ----------
@@ -869,7 +880,9 @@ class _ClocksVersal(_ClocksBase):
 
         Note
         ----
-        A `clk_cfg` divisor takes precedence over `div0`.
+        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
+        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
+        `div1`.
 
         Parameters
         ----------
