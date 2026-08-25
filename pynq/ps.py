@@ -349,7 +349,7 @@ class _ClocksMeta(type):
         return cls._instance.get_pl_clk(clk_idx)
 
     def set_pl_clk(cls, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
@@ -358,18 +358,15 @@ class _ClocksMeta(type):
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have three options:
+        Users have two options:
         1. specify the two frequency divider values directly (div0, div1), or
         2. specify the clock rate, in which case the divider values will be
         calculated.
-        3. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
-        `div1`.
+        will be ignored.
 
         Parameters
         ----------
@@ -381,11 +378,11 @@ class _ClocksMeta(type):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        clk_cfg : dict
-            An entry of the `clock_dict` describing the clock for the given device.
+        src_sel : str
+            The name of the PLL sourcing the clock.
 
         """
-        cls._instance.set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
+        cls._instance.set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
 
     @property
     def _instance(cls):
@@ -432,7 +429,7 @@ class _ClocksBase:
         return round(src_clk_mhz / (pl_clk_odiv0 * pl_clk_odiv1), 6)
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
@@ -441,19 +438,15 @@ class _ClocksBase:
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have three options:
+        Users have two options:
         1. specify the two frequency divider values directly (div0, div1), or
         2. specify the clock rate, in which case the divider values will be
-        calculated.
-        3. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
         calculated.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
-        `div1`.
+        will be ignored.
 
         Parameters
         ----------
@@ -465,8 +458,8 @@ class _ClocksBase:
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        clk_cfg : dict
-            An entry of the `clock_dict` describing the clock for the given device.
+        src_sel : str
+            The name of the PLL sourcing the clock.
 
         """
         if clk_idx not in range(4):
@@ -476,11 +469,8 @@ class _ClocksBase:
         div0_width = 6
         div1_width = 6
 
-        if clk_cfg is not None:
-            div0 = clk_cfg.get("divisor0", div0)
-            div1 = clk_cfg.get("divisor1", div1)
-            if clk_cfg.get("src_sel") is not None:
-                pl_clk_reg.SRCSEL = self._get_src_clk_idx(clk_cfg["src_sel"])
+        if src_sel is not None:
+            pl_clk_reg.SRCSEL = self._get_src_clk_idx(src_sel)
 
         src_clk_idx = pl_clk_reg.SRCSEL
         src_clk_mhz = self._get_src_clk_mhz(src_clk_idx)
@@ -617,26 +607,22 @@ class _ClocksUltrascale(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have three options:
+        Users have two options:
         1. specify the two frequency divider values directly (div0, div1), or
         2. specify the clock rate, in which case the divider values will be
-        calculated.
-        3. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
         calculated.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
-        `div1`.
+        will be ignored.
 
         Parameters
         ----------
@@ -648,13 +634,13 @@ class _ClocksUltrascale(_ClocksBase):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        clk_cfg : dict
-            An entry of the `clock_dict` describing the clock for the given device.
+        src_sel : str
+            The name of the PLL sourcing the clock.
 
         """
         pl_clk_reg = self.PL_CLK_CTRLS[clk_idx]
         pl_clk_reg.CLKACT = 1
-        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
+        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
 
     def get_pll_mhz(self, pll_reg):
         """The getter method for PLL output clocks.
@@ -744,26 +730,22 @@ class _ClocksZynq(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have three options:
+        Users have two options:
         1. specify the two frequency divider values directly (div0, div1), or
         2. specify the clock rate, in which case the divider values will be
-        calculated.
-        3. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
         calculated.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
-        `div1`.
+        will be ignored.
 
         Parameters
         ----------
@@ -775,11 +757,11 @@ class _ClocksZynq(_ClocksBase):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        clk_cfg : dict
-            An entry of the `clock_dict` describing the clock for the given device.
+        src_sel : str
+            The name of the PLL sourcing the clock.
 
         """
-        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
+        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
 
     def get_pll_mhz(self, pll_reg):
         """The getter method for PLL output clocks.
@@ -863,7 +845,7 @@ class _ClocksVersal(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
         """This method sets a PL clock frequency.
 
         Versal PL clocks have a single divisor, so `div1` is accepted for
@@ -871,18 +853,14 @@ class _ClocksVersal(_ClocksBase):
         cannot reach is searched for on the other PLL sources, since the
         PLLs divide into different rates.
 
-        Users have three options:
-        1. pass a `clock_dict` entry, from which each architecture takes the
-        divisors and clock source it needs.,
-        2. specify the frequency divider value directly (div0), or
-        3. specify the clock rate, in which case the divider value will be
+        Users have two options:
+        1. specify the frequency divider value directly (div0), or
+        2. specify the clock rate, in which case the divider value will be
         calculated.
 
         Note
         ----
-        In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored. A `clk_cfg` divisor takes precedence over `div0` and
-        `div1`.
+        In case `div0` is specified, the parameter `clk_mhz` will be ignored.
 
         Parameters
         ----------
@@ -894,8 +872,8 @@ class _ClocksVersal(_ClocksBase):
             Unused, the clock has a single divisor.
         clk_mhz : float
             The clock rate in MHz.
-        clk_cfg : dict
-            An entry of the `clock_dict` describing the clock for the given device.
+        src_sel : str
+            The name of the PLL sourcing the clock.
 
         """
         if clk_idx not in range(4):
@@ -904,10 +882,8 @@ class _ClocksVersal(_ClocksBase):
         pl_clk_reg = self.PL_CLK_CTRLS[clk_idx]
         div0_width = 10
 
-        if clk_cfg is not None:
-            div0 = clk_cfg.get("divisor0", div0)
-            if clk_cfg.get("src_sel") is not None:
-                pl_clk_reg.SRCSEL = self._get_src_clk_idx(clk_cfg["src_sel"])
+        if src_sel is not None:
+            pl_clk_reg.SRCSEL = self._get_src_clk_idx(src_sel)
 
         src_clk_idx = pl_clk_reg.SRCSEL
         src_clk_mhz = self._get_src_clk_mhz(src_clk_idx)

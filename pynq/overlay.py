@@ -421,8 +421,11 @@ class Overlay(Bitstream):
         """
         for i in self.clock_dict:
             if "enable" in self.clock_dict[i]:
+                div0 = self.clock_dict[i].get("divisor0")
+                div1 = self.clock_dict[i].get("divisor1")
+                src_sel = self.clock_dict[i].get("src_sel")
                 if self.clock_dict[i]["enable"]:
-                    Clocks.set_pl_clk(i, clk_cfg=self.clock_dict[i])
+                    Clocks.set_pl_clk(i, div0, div1, src_sel=src_sel)
                 else:
                     Clocks.set_pl_clk(i)
 
