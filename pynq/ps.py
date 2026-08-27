@@ -2,6 +2,7 @@
 #   SPDX-License-Identifier: BSD-3-Clause
 
 import platform
+import time
 import warnings
 import os
 
@@ -84,7 +85,18 @@ ZU_PLL_FIELDS = {
     'DIV2': {'access': 'read-write', 'bit_offset': 16, 'bit_width': 1,
              'description': 'Divide output frequency by 2'},
     'FBDIV': {'access': 'read-write', 'bit_offset': 8, 'bit_width': 7,
-              'description': 'Feedback divisor for the PLL'}
+              'description': 'Feedback divisor for the PLL'},
+    'BYPASS': {'access': 'read-write', 'bit_offset': 3, 'bit_width': 1,
+               'description': 'Bypass the PLL'},
+    'RESET': {'access': 'read-write', 'bit_offset': 0, 'bit_width': 1,
+              'description': 'Assert reset to the PLL'}
+}
+
+ZU_PLL_STATUS_FIELDS = {
+    'RPLL_LOCK': {'access': 'read-only', 'bit_offset': 1, 'bit_width': 1,
+                  'description': 'RPLL is locked'},
+    'IOPLL_LOCK': {'access': 'read-only', 'bit_offset': 0, 'bit_width': 1,
+                   'description': 'IOPLL is locked'}
 }
 
 ZU_CLK_FIELDS = {
@@ -109,9 +121,16 @@ ZU_CRL_REGISTERS = {
     'IOPLL_CTRL': {'address_offset': 0x20, 'access': 'read-write',
                    'size': 32, 'description': 'IOPLL Clock Unit Control',
                    'fields': ZU_PLL_FIELDS},
+    'IOPLL_CFG': {'address_offset': 0x24, 'access': 'read-write',
+                  'size': 32, 'description': 'IOPLL Loop Filter Settings'},
     'RPLL_CTRL': {'address_offset': 0x30, 'access': 'read-write',
                   'size': 32, 'description': 'RPLL Clock Unit Control',
                   'fields': ZU_PLL_FIELDS},
+    'RPLL_CFG': {'address_offset': 0x34, 'access': 'read-write',
+                 'size': 32, 'description': 'RPLL Loop Filter Settings'},
+    'PLL_STATUS': {'address_offset': 0x40, 'access': 'read-only',
+                   'size': 32, 'description': 'PLL Lock Status',
+                   'fields': ZU_PLL_STATUS_FIELDS},
     'PL0_REF_CTRL': {'address_offset': 0xc0, 'access': 'read-write',
                      'size': 32, 'description': 'PL Clock 0 Control',
                      'fields': ZU_CLK_FIELDS},
@@ -349,7 +368,7 @@ class _ClocksMeta(type):
         return cls._instance.get_pl_clk(clk_idx)
 
     def set_pl_clk(cls, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
@@ -358,15 +377,18 @@ class _ClocksMeta(type):
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have two options:
-        1. specify the two frequency divider values directly (div0, div1), or
+        Users have three options:
+        1. specify the two frequency divider values directly (div0, div1),
         2. specify the clock rate, in which case the divider values will be
-        calculated.
+        calculated, or
+        3. pass a `clock_dict` entry, which supplies the divisors, the clock
+        source and the PLL rate the design was built with.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored.
+        will be ignored. A `clk_cfg` takes precedence over `div0`, `div1`
+        and `clk_mhz`.
 
         Parameters
         ----------
@@ -378,11 +400,11 @@ class _ClocksMeta(type):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        src_sel : str
-            The name of the PLL sourcing the clock.
+        clk_cfg : dict
+            An entry of the `clock_dict` describing the clock.
 
         """
-        cls._instance.set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
+        cls._instance.set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
 
     @property
     def _instance(cls):
@@ -429,7 +451,7 @@ class _ClocksBase:
         return round(src_clk_mhz / (pl_clk_odiv0 * pl_clk_odiv1), 6)
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
@@ -438,15 +460,18 @@ class _ClocksBase:
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have two options:
-        1. specify the two frequency divider values directly (div0, div1), or
+        Users have three options:
+        1. specify the two frequency divider values directly (div0, div1),
         2. specify the clock rate, in which case the divider values will be
-        calculated.
+        calculated, or
+        3. pass a `clock_dict` entry, which supplies the divisors and the
+        clock source the design was built with.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored.
+        will be ignored. A `clk_cfg` takes precedence over `div0`, `div1`
+        and `clk_mhz`.
 
         Parameters
         ----------
@@ -458,8 +483,8 @@ class _ClocksBase:
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        src_sel : str
-            The name of the PLL sourcing the clock.
+        clk_cfg : dict
+            An entry of the `clock_dict` describing the clock.
 
         """
         if clk_idx not in range(4):
@@ -469,8 +494,11 @@ class _ClocksBase:
         div0_width = 6
         div1_width = 6
 
-        if src_sel is not None:
-            pl_clk_reg.SRCSEL = self._get_src_clk_idx(src_sel)
+        if clk_cfg is not None:
+            div0 = clk_cfg.get("divisor0")
+            div1 = clk_cfg.get("divisor1")
+            if clk_cfg.get("src_sel") is not None:
+                pl_clk_reg.SRCSEL = self._get_src_clk_idx(clk_cfg["src_sel"])
 
         src_clk_idx = pl_clk_reg.SRCSEL
         src_clk_mhz = self._get_src_clk_mhz(src_clk_idx)
@@ -573,6 +601,12 @@ class _ClocksUltrascale(_ClocksBase):
 
     PL_SRC_CLK_NAMES = {'IOPLL': 0, 'RPLL': 2, 'DPLL': 3}
 
+    # Only the CRL PLLs may be reprogrammed. DPLL clocks the DDR controller.
+    PROGRAMMABLE_PLL_NAMES = ('IOPLL', 'RPLL')
+
+    # Loop filter helper data, as generated in psu_init.c for a 2400MHz VCO.
+    PLL_CFG_VALUE = 0x7E4B0C62
+
     VALID_CLOCK_DIV_PRODUCTS = {i*j: (i, j)
                                 for i in range(1 << 6)
                                 for j in range(1 << 6)}
@@ -607,22 +641,25 @@ class _ClocksUltrascale(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have two options:
-        1. specify the two frequency divider values directly (div0, div1), or
+        Users have three options:
+        1. specify the two frequency divider values directly (div0, div1),
         2. specify the clock rate, in which case the divider values will be
-        calculated.
+        calculated, or
+        3. pass a `clock_dict` entry, which supplies the divisors, the clock
+        source and the PLL rate the design was built with.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored.
+        will be ignored. A `clk_cfg` takes precedence over `div0`, `div1`
+        and `clk_mhz`.
 
         Parameters
         ----------
@@ -634,13 +671,73 @@ class _ClocksUltrascale(_ClocksBase):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        src_sel : str
-            The name of the PLL sourcing the clock.
+        clk_cfg : dict
+            An entry of the `clock_dict` describing the clock.
 
         """
         pl_clk_reg = self.PL_CLK_CTRLS[clk_idx]
         pl_clk_reg.CLKACT = 1
-        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
+        if clk_cfg is not None and clk_cfg.get("pll_fbdiv") is not None:
+            self._set_pll_fbdiv(clk_cfg["src_sel"], clk_cfg["pll_fbdiv"])
+        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
+
+    def _set_pll_fbdiv(self, pll_name, fbdiv):
+        """Program a PLL's feedback divisor, returning True once it locks.
+
+        A PLL that does not lock is restored to the divisor it booted with.
+
+        Parameters
+        ----------
+        pll_name : str
+            The name of the PLL to be reprogrammed.
+        fbdiv : int
+            The feedback divisor the design requests.
+
+        """
+        pll_reg = self.PL_SRC_PLL_CTRLS[self._get_src_clk_idx(pll_name)]
+        fbdiv_orig = pll_reg.FBDIV
+        if fbdiv == fbdiv_orig:
+            return True
+        if pll_name not in self.PROGRAMMABLE_PLL_NAMES:
+            warnings.warn(
+                "{} is not supported by PYNQ; only {} can be reprogrammed. "
+                "Measure the clocks derived from it before relying on "
+                "them.".format(
+                    pll_name, " and ".join(self.PROGRAMMABLE_PLL_NAMES)))
+            return False
+
+        cfg_orig = int(getattr(self._crl_registers, pll_name + '_CFG'))
+        if self._write_pll(pll_reg, pll_name, fbdiv, self.PLL_CFG_VALUE):
+            return True
+
+        warnings.warn(
+            "{} did not lock at FBDIV {}, so it has been restored to {}. "
+            "Clocks sourced from it will not reach the rate the design "
+            "requests.".format(pll_name, fbdiv, fbdiv_orig))
+        self._write_pll(pll_reg, pll_name, fbdiv_orig, cfg_orig)
+        return False
+
+    def _write_pll(self, pll_reg, pll_name, fbdiv, cfg, timeout=0.5):
+        """Retune a PLL, returning True once it locks and is out of bypass.
+
+        The PLL is bypassed and held in reset for the write, and bypass is
+        released only after it has locked -- so a PLL that does not lock is
+        left bypassed rather than driving its consumers from an unlocked
+        output.
+
+        """
+        pll_reg.BYPASS = 1
+        pll_reg.RESET = 1
+        setattr(self._crl_registers, pll_name + '_CFG', cfg)
+        pll_reg.FBDIV = fbdiv
+        pll_reg.RESET = 0
+        deadline = time.monotonic() + timeout
+        while not getattr(self._crl_registers.PLL_STATUS,
+                          pll_name + '_LOCK'):
+            if time.monotonic() > deadline:
+                return False
+        pll_reg.BYPASS = 0
+        return True
 
     def get_pll_mhz(self, pll_reg):
         """The getter method for PLL output clocks.
@@ -730,22 +827,25 @@ class _ClocksZynq(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
         """This method sets a PL clock frequency.
 
         Users have to specify the index of the PL clock to be changed.
 
         The CPU, and other source clocks, by default, should not get changed.
 
-        Users have two options:
-        1. specify the two frequency divider values directly (div0, div1), or
+        Users have three options:
+        1. specify the two frequency divider values directly (div0, div1),
         2. specify the clock rate, in which case the divider values will be
-        calculated.
+        calculated, or
+        3. pass a `clock_dict` entry, which supplies the divisors and the
+        clock source the design was built with.
 
         Note
         ----
         In case `div0` and `div1` are both specified, the parameter `clk_mhz`
-        will be ignored.
+        will be ignored. A `clk_cfg` takes precedence over `div0`, `div1`
+        and `clk_mhz`.
 
         Parameters
         ----------
@@ -757,11 +857,11 @@ class _ClocksZynq(_ClocksBase):
             The second frequency divider value.
         clk_mhz : float
             The clock rate in MHz.
-        src_sel : str
-            The name of the PLL sourcing the clock.
+        clk_cfg : dict
+            An entry of the `clock_dict` describing the clock.
 
         """
-        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, src_sel)
+        super().set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
 
     def get_pll_mhz(self, pll_reg):
         """The getter method for PLL output clocks.
@@ -845,7 +945,7 @@ class _ClocksVersal(_ClocksBase):
         ]
 
     def set_pl_clk(self, clk_idx, div0=None, div1=None,
-                   clk_mhz=DEFAULT_PL_CLK_MHZ, src_sel=None):
+                   clk_mhz=DEFAULT_PL_CLK_MHZ, clk_cfg=None):
         """This method sets a PL clock frequency.
 
         Versal PL clocks have a single divisor, so `div1` is accepted for
@@ -853,14 +953,17 @@ class _ClocksVersal(_ClocksBase):
         cannot reach is searched for on the other PLL sources, since the
         PLLs divide into different rates.
 
-        Users have two options:
-        1. specify the frequency divider value directly (div0), or
+        Users have three options:
+        1. specify the frequency divider value directly (div0),
         2. specify the clock rate, in which case the divider value will be
-        calculated.
+        calculated, or
+        3. pass a `clock_dict` entry, which supplies the divisor and the
+        clock source the design was built with.
 
         Note
         ----
         In case `div0` is specified, the parameter `clk_mhz` will be ignored.
+        A `clk_cfg` takes precedence over `div0` and `clk_mhz`.
 
         Parameters
         ----------
@@ -872,8 +975,8 @@ class _ClocksVersal(_ClocksBase):
             Unused, the clock has a single divisor.
         clk_mhz : float
             The clock rate in MHz.
-        src_sel : str
-            The name of the PLL sourcing the clock.
+        clk_cfg : dict
+            An entry of the `clock_dict` describing the clock.
 
         """
         if clk_idx not in range(4):
@@ -882,8 +985,10 @@ class _ClocksVersal(_ClocksBase):
         pl_clk_reg = self.PL_CLK_CTRLS[clk_idx]
         div0_width = 10
 
-        if src_sel is not None:
-            pl_clk_reg.SRCSEL = self._get_src_clk_idx(src_sel)
+        if clk_cfg is not None:
+            div0 = clk_cfg.get("divisor0")
+            if clk_cfg.get("src_sel") is not None:
+                pl_clk_reg.SRCSEL = self._get_src_clk_idx(clk_cfg["src_sel"])
 
         src_clk_idx = pl_clk_reg.SRCSEL
         src_clk_mhz = self._get_src_clk_mhz(src_clk_idx)
