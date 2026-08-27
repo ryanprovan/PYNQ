@@ -505,7 +505,8 @@ class _ClocksBase:
 
         if div0 is None and div1 is None:
             div0, div1 = self._get_2_divisors(src_clk_mhz, clk_mhz,
-                                              div0_width, div1_width)
+                                              div0_width, div1_width,
+                                              clk_idx)
         elif div0 is not None and div1 is None:
             div1 = round(src_clk_mhz / clk_mhz / div0)
         elif div1 is not None and div0 is None:
@@ -552,7 +553,8 @@ class _ClocksBase:
                 return name
         return str(src_clk_idx)
 
-    def _get_2_divisors(self, freq_high, freq_desired, reg0_width, reg1_width):
+    def _get_2_divisors(self, freq_high, freq_desired, reg0_width, reg1_width,
+                        clk_idx):
         """Return 2 divisors of the specified width for frequency divider.
 
         Warning will be raised if the closest clock rate achievable
@@ -568,6 +570,8 @@ class _ClocksBase:
             The register width of the first divisor.
         reg1_width : int
             The register width of the second divisor.
+        clk_idx : int
+            The index of the PL clock being set.
 
         Returns
         -------
@@ -580,8 +584,8 @@ class _ClocksBase:
                     key=lambda x: abs(x[1] - div_product_desired))
         if abs(freq_desired - freq_high / q0) > 0.01 * freq_desired:
             warnings.warn(
-                "Setting frequency to the closest possible value {}MHz.".format(
-                    round(freq_high / q0, 5)))
+                "Setting PL{} clock frequency to the closest possible value "
+                "{}MHz.".format(clk_idx, round(freq_high / q0, 5)))
         return self.VALID_CLOCK_DIV_PRODUCTS[q0]
 
 
@@ -677,8 +681,20 @@ class _ClocksUltrascale(_ClocksBase):
         """
         pl_clk_reg = self.PL_CLK_CTRLS[clk_idx]
         pl_clk_reg.CLKACT = 1
-        if clk_cfg is not None and clk_cfg.get("pll_fbdiv") is not None:
-            self._set_pll_fbdiv(clk_cfg["src_sel"], clk_cfg["pll_fbdiv"])
+
+        if clk_cfg is not None:
+            src_sel = clk_cfg.get("src_sel")
+            if src_sel is not None and src_sel not in self.PROGRAMMABLE_PLL_NAMES:
+                warnings.warn(
+                    "{} is not supported by PYNQ; only {} can be "
+                    "reprogrammed. Measure the clocks derived from it before "
+                    "relying on them.".format(
+                        src_sel, " and ".join(self.PROGRAMMABLE_PLL_NAMES)))
+
+            pll_fbdiv = clk_cfg.get("pll_fbdiv")
+            if pll_fbdiv is not None:
+                self._set_pll_fbdiv(src_sel, pll_fbdiv)
+
         super().set_pl_clk(clk_idx, div0, div1, clk_mhz, clk_cfg)
 
     def _set_pll_fbdiv(self, pll_name, fbdiv):
@@ -699,11 +715,6 @@ class _ClocksUltrascale(_ClocksBase):
         if fbdiv == fbdiv_orig:
             return True
         if pll_name not in self.PROGRAMMABLE_PLL_NAMES:
-            warnings.warn(
-                "{} is not supported by PYNQ; only {} can be reprogrammed. "
-                "Measure the clocks derived from it before relying on "
-                "them.".format(
-                    pll_name, " and ".join(self.PROGRAMMABLE_PLL_NAMES)))
             return False
 
         cfg_orig = int(getattr(self._crl_registers, pll_name + '_CFG'))
@@ -1006,8 +1017,9 @@ class _ClocksVersal(_ClocksBase):
                     pl_clk_reg.SRCSEL = new_clk_idx
                 if abs(clk_mhz - src_clk_mhz / div0) > 0.01 * clk_mhz:
                     warnings.warn(
-                        "Setting frequency to the closest possible value "
-                        "{}MHz.".format(round(src_clk_mhz / div0, 5)))
+                        "Setting PL{} clock frequency to the closest possible "
+                        "value {}MHz.".format(
+                            clk_idx, round(src_clk_mhz / div0, 5)))
 
         if div0 <= 0 or div0 > ((1 << div0_width) - 1):
             raise ValueError("Frequency divider 0 value out of range.")
