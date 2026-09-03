@@ -18,3 +18,8 @@ void Xil_Assert(const char* file, int line) {
 	printf("Assertion failed at %s:%d\n", file, line);
 	exit(1);
 }
+
+unsigned int XGetCoreId(void)
+{
+    return 0;
+}

@@ -5,7 +5,7 @@ EMBEDDEDSW_DIR ?= embeddedsw
 PACKAGE := xrfdc
 ESW_LIBS := rfdc scugic
 LIBRARY := lib$(PACKAGE).so
-ESW_VERSION  := xilinx-v2020.2
+ESW_VERSION  := xilinx_v2025.2
 LIB_METAL_DIR := $(EMBEDDEDSW_DIR)/ThirdParty/sw_services/libmetal/src/libmetal
 LIB_METAL_INC := $(LIB_METAL_DIR)/build-libmetal/lib/include
 ESW_SRC := $(filter-out %_g.c, $(foreach lib, $(ESW_LIBS), $(wildcard $(EMBEDDEDSW_DIR)/XilinxProcessorIPLib/drivers/$(lib)/src/*.c)))
@@ -15,13 +15,15 @@ OS_INC += -I$(EMBEDDEDSW_DIR)/lib/bsp/standalone/src/arm/ARMv8/64bit
 OS_INC += -I$(EMBEDDEDSW_DIR)/lib/bsp/standalone/src/arm/common/gcc
 OS_INC += -I$(EMBEDDEDSW_DIR)/lib/bsp/standalone/src/arm/common
 OS_INC += -I$(LIB_METAL_INC)
+OS_SRC := $(EMBEDDEDSW_DIR)/lib/bsp/standalone/src/arm/common/xil_spinlock.c
 LOCAL_SRC := $(wildcard src/*.c)
 
 all: $(LIBRARY)
 
 $(LIBRARY): $(EMBEDDEDSW_DIR) $(LIB_METAL_INC)
 	gcc -o $(LIBRARY) -shared -fPIC $(ESW_INC) \
-		-Isrc $(ESW_SRC) $(LOCAL_SRC) $(OS_INC) -D__BAREMETAL__ -ggdb
+		-Isrc $(ESW_SRC) $(OS_SRC) $(LOCAL_SRC) $(OS_INC) -D__BAREMETAL__ \
+		-include src/xparameters.h -ggdb
 
 install:
 	cp $(LIBRARY) $(PACKAGE)/

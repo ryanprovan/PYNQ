@@ -95,7 +95,6 @@ _tile_props = [
 
 _rfdc_props = [
     ("IPStatus"           , "XRFdc_IPStatus"             , True                      ),
-    ("ClkDistribution"    , "XRFdc_Distribution_Settings", False                     )
 ]
 
 # Next we define some helper functions for creating properties and
@@ -378,9 +377,68 @@ class RFdc(pynq.DefaultIP):
         _lib.XRFdc_CfgInitialize(self._instance, self._config)
         self.adc_tiles = [RFdcAdcTile(self, i) for i in range(4)]
         self.dac_tiles = [RFdcDacTile(self, i) for i in range(4)]
+        self.adc_mts_config = _ffi.new("XRFdc_MultiConverter_Sync_Config*")
+        self.dac_mts_config = _ffi.new("XRFdc_MultiConverter_Sync_Config*")
 
     def _call_function(self, name, *args):
         _safe_wrapper(f"XRFdc_{name}", self._instance, *args)
+
+    @property
+    def ClkDistribution(self):
+        value = _ffi.new("XRFdc_Distribution_System_Settings*")
+        self._call_function("GetClkDistribution", value)
+        return _unpack_value(value)
+
+    @ClkDistribution.setter
+    def ClkDistribution(self, value):
+        self._call_function(
+            "SetClkDistribution",
+            _pack_value("XRFdc_Distribution_Settings", value),
+        )
+
+    def adc_mts_init(self, RefTile):
+        _safe_wrapper(
+            "XRFdc_MultiConverter_Init",
+            self.adc_mts_config,
+            _ffi.NULL,
+            _ffi.NULL,
+            RefTile,
+        )
+
+    def dac_mts_init(self, RefTile):
+        _safe_wrapper(
+            "XRFdc_MultiConverter_Init",
+            self.dac_mts_config,
+            _ffi.NULL,
+            _ffi.NULL,
+            RefTile,
+        )
+
+    def adc_mts_sync(self):
+        _safe_wrapper(
+            "XRFdc_MultiConverter_Sync",
+            self._instance,
+            _lib.XRFDC_ADC_TILE,
+            self.adc_mts_config,
+        )
+
+    def dac_mts_sync(self):
+        _safe_wrapper(
+            "XRFdc_MultiConverter_Sync",
+            self._instance,
+            _lib.XRFDC_DAC_TILE,
+            self.dac_mts_config,
+        )
+
+    def mts_sysref_enable(self, SysRefEnable=True):
+        en = 1 if SysRefEnable else 0
+        _safe_wrapper(
+            "XRFdc_MTS_Sysref_Config",
+            self._instance,
+            self.dac_mts_config,
+            self.adc_mts_config,
+            en,
+        )
 
 
 # Finally we can add our data-driven properties to each class in the hierarchy
@@ -448,6 +506,5 @@ TRSHD_OFF                  = 0x0
 TRSHD_STICKY_OVER          = 0x1
 TRSHD_STICKY_UNDER         = 0x2
 TRSHD_HYSTERISIS           = 0x3
-
 
 

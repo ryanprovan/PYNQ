@@ -41,7 +41,8 @@ _DAC_Tile = [
     ('RefClkDiv', 'C_DAC{}_Refclk_Div', 'int'),
     ('MultibandConfig', 'C_DAC{}_Band', 'int'),
     ('MaxSampleRate', 'C_DAC{}_Fs_Max', 'double'),
-    ('NumSlices', 'C_DAC{}_Slices', 'int')
+    ('NumSlices', 'C_DAC{}_Slices', 'int'),
+    ('LinkCoupling', 'C_DAC{}_Link_Coupling', 'int')
 ]
 
 _ADC_Tile = [
