@@ -3,7 +3,7 @@ Getting Started
 ***************
 
 You need a supported AMD-Xilinx platform to get started. How you get PYNQ depends
-on your platform. For some Zynq|Zynq Ultrascale+ platforms you can download 
+on your platform. For Zynq Ultrascale+ and Versal platforms you can download 
 an SD card image to boot the board. For other platforms, including Kria
 SoMs, you can install PYNQ onto your host Operating System. 
 
