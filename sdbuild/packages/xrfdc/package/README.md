@@ -1,6 +1,7 @@
 # `xrfdc` Package
 
 This is a package implementing the drivers for RF data converter IP.
+It builds the AMD RFdc driver from the `xilinx_v2025.2` embeddedsw tag.
 
 ## Usage
 
@@ -138,6 +139,14 @@ Some functions are Gen 3 specific. These are clearly labelled in the RFDC user g
 If attempting to use one of these functions on a Gen 1 board, the user will see the error:
 metal: error:     
  Requested functionality not available for this IP 
+
+## Multi-tile synchronization
+
+The driver exposes separate ADC and DAC MTS configurations. Initialize the
+required configuration with `adc_mts_init()` or `dac_mts_init()`, adjust the
+corresponding `adc_mts_config` or `dac_mts_config` fields if needed, and then
+call `adc_mts_sync()` or `dac_mts_sync()`. The `mts_sysref_enable()` method
+enables or disables SYSREF for both configurations.
 
 Copyright (C) 2021 Xilinx, Inc
 
