@@ -19,7 +19,7 @@ Updates to PYNQ in this release:
    * Xilinx tools upgraded to **2025.2**
    * Build moved from Petalinux to AMD **EDF (Yocto / bitbake)** on an
      **Ubuntu 24.04 (Noble)** root filesystem.
-     Petalinux is no longer required on the host; only Vivado and
+     Petalinux is no longer required on the host; only Vivado, Vitis, and
      Docker are.
    * Yocto version compatibility: Scarthgap
 
