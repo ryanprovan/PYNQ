@@ -6,6 +6,6 @@ title: "PYNQ"
 type: software
 license: 'BSD-3-Clause'
 version: 4.0.0
-date-released: "2025-09-24"
+date-released: "2026-09-29"
 url: 'https://pynq.io'
 repository-code: "https://github.com/Xilinx/PYNQ"
