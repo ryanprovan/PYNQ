@@ -19,6 +19,7 @@ docker build \
   --build-arg USER_UID=$(id -u) \
   --build-arg USER_GID=$(id -g) \
   -t pynqdock:latest .
+cd ..
 ```
 
 The build arguments make files that the build creates owned by your host user.
