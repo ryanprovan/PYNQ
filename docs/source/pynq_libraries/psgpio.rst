@@ -3,10 +3,15 @@
 PS GPIO
 =======
 
-The Zynq device has up to 64 GPIO from PS to PL. These can be used for simple control type operations. For example, in the base overlay, the PS GPIO wires are used as the reset signals for the IOPs. 
-The PS GPIO are a very simple interface and there is no IP required in the PL to use them. 
+The Zynq UltraScale+ device has up to 96 GPIO from PS to PL (``zynqmp_gpio``).
+Versal devices have both a PS GPIO (``versal_gpio``) and a PMC GPIO (``pmc_gpio``)
+with up to 32 and 64 GPIO from PS to PL, respectively. These can be used for simple
+control type operations. For example, in the ZCU104 base overlay, the PS GPIO wires
+are used as the reset and interrupt-acknowledge signals for the IOPs. The PS GPIO are
+a very simple interface and there is no IP required in the PL to use them. 
 
-The *GPIO* class is used to control the PS GPIO. Note that *AXI* GPIO are controlled by the :ref:`pynq-libraries-axigpio` class. 
+The *GPIO* class is used to control the PS GPIO. Note that *AXI* GPIO are
+controlled by the :ref:`pynq-libraries-axigpio` class. 
 
 Block Diagram
 -------------
