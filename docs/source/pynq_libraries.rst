@@ -39,7 +39,7 @@ extended to support additional IP.
 
 Zynq UltraScale+ and Versal platforms usually have one or more *headers* or *interfaces* that allow
 connection of external peripherals, or to connect directly to the PL
-pins. On the ZCU104, a range of off-the-shelf peripherals can be connected to the Pmod
+pins. On the Zynq Ultrascale+, a range of off-the-shelf peripherals can be connected to the Pmod
 interfaces. Other peripherals can be connected to these ports via adapters, or
 with a breadboard. Note that while a peripheral can be physically connected to
 the PL pins, a controller must be built into the overlay, and a software
