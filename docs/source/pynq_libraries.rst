@@ -37,12 +37,12 @@ a number of common peripherals including Video (HDMI in and Out), GPIO devices
 (Buttons, Switches, LEDs), and sensors and actuators. The PYNQ API can also be
 extended to support additional IP.
 
-Zynq platforms usually have one or more *headers* or *interfaces* that allow
-connection of external peripherals, or to connect directly to the Zynq PL
-pins. A range of off-the-shelf peripherals can be connected to Pmod
+Zynq UltraScale+ and Versal platforms usually have one or more *headers* or *interfaces* that allow
+connection of external peripherals, or to connect directly to the PL
+pins. On the ZCU104, a range of off-the-shelf peripherals can be connected to the Pmod
 interfaces. Other peripherals can be connected to these ports via adapters, or
 with a breadboard. Note that while a peripheral can be physically connected to
-the Zynq PL pins, a controller must be built into the overlay, and a software
+the PL pins, a controller must be built into the overlay, and a software
 driver provided, before the peripheral can be used.
 
 The PYNQ libraries provide support for the PynqMicroBlaze subsystem, allowing
