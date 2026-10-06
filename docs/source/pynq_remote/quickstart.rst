@@ -6,7 +6,8 @@ Quick Start
 This page shows how to get started with PYNQ.remote. We use the ZCU104 and the
 `PYNQ-HelloWorld <https://github.com/Xilinx/PYNQ-HelloWorld>`_ overlay as an
 example, but the steps are similar for other supported AMD adaptive SoCs and
-overlays.
+overlays. The steps are provided for Windows, Linux and maxOS operating systems.
+Use the commands that match your machine to setup and use PYNQ.remote.
 
 Prerequisites
 -------------
@@ -16,40 +17,29 @@ Prerequisites
 * Supported AMD adaptive SoC with network access
 * Network connection between host and target
 
-Step 1: Install PYNQ.remote on the Host
----------------------------------------
+Step 1: Install uv
+------------------
 
-PYNQ.remote uses two environment variables at different stages. Set
-``PYNQ_REMOTE=1`` when installing the ``pynq`` package on the host so that
-remote client dependencies are installed and native board binaries are skipped.
-Set ``PYNQ_REMOTE_DEVICES`` at runtime, before ``import pynq``, to identify the
-target board. See :doc:`env_variables` for platform-specific ways to set
-``PYNQ_REMOTE_DEVICES``.
+When using PYNQ.remote, the ``uv`` tool is used to manage Python versions,
+projects and packages from within an isolated environment. This avoids any
+project specific dependencies clashing with your system. Dependencies from
+you project are recorded in a ``pyproject.toml``.
 
-It is recommended to use a
-`Python virtual environment <https://docs.python.org/3/library/venv.html>`_.
+The ``uv`` tool can be installed using the following command:
 
 **Linux/macOS:**
 
 .. code-block:: bash
 
-   PYNQ_REMOTE=1 pip install pynq
-
-To install the development version from source:
-
-.. code-block:: bash
-
-   git clone --recursive https://github.com/Xilinx/PYNQ.git
-   cd PYNQ
-   PYNQ_REMOTE=1 pip install .
+   curl -LsSf https://astral.sh/uv/install.sh | sh
 
 **Windows (PowerShell):**
 
 .. code-block:: powershell
 
-   $env:PYNQ_REMOTE="1"; pip install pynq
+   powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-Step 2: Prepare and Boot the Target Device
+Step 2: Creating a Project
 ------------------------------------------
 
 * Create a PYNQ.remote image using the instructions in :doc:`image_build`.
