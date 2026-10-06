@@ -49,5 +49,13 @@ an appropriate overlay with the PS GPIO connected to something.
    output.write(0)
    input.read()
 
+On Versal, ``get_gpio_pin()`` requires a ``target_label`` to select the specific GPIO
+controller between ``versal_gpio`` and ``pmc_gpio``.
+
+.. code-block:: Python
+
+   output = GPIO(GPIO.get_gpio_pin(0, 'pmc_gpio'), 'out')
+   input = GPIO(GPIO.get_gpio_pin(1, 'pmc_gpio'), 'in')
+
 More information about the GPIO module and the API for reading, writing
 and waiting for interrupts can be found in the :ref:`pynq-gpio` sections
