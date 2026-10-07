@@ -66,8 +66,9 @@ Using the Docker-based build flow
 #. Flash the generated ``sdbuild/output/<BOARD>-4.0.0-remote.img`` image to an
    SD card and boot your device (see :doc:`../appendix/sdcard`).
 
-#. After booting, the ``pynq-remote`` server starts automatically. Use
-   ``ip addr`` on the board to find its address, then follow :doc:`quickstart`.
+#. After booting, the ``pynq-remote`` server starts automatically. Run
+   ``ip addr`` on the board through a serial console to find its address,
+   then follow :doc:`quickstart`.
 
 Image size
 ----------
