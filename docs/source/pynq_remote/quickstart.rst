@@ -13,7 +13,7 @@ Prerequisites
 -------------
 
 * Host machine running Linux, Windows, or macOS
-* Supported AMD adaptive SoC running a PYNQ.remote image (see :doc:`image_build`)
+* Supported AMD adaptive SoC with network access
 * Network connection between host and target
 
 Step 1: Install uv
@@ -76,7 +76,7 @@ installer needs to be instructed to build in *remote mode*. To do this, set the
 PYNQ can then be installed, **followed by** any other dependencies required
 for your project. The first command below installs the most recent version of
 PYNQ from GitHub. ``uv add`` installs packages into the project environment and
-records each package in the ``pyproject.toml``.
+records each them in the ``pyproject.toml``.
 
 **Linux/macOS and Windows (PowerShell):**
 
