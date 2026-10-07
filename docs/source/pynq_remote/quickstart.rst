@@ -76,7 +76,7 @@ installer needs to be instructed to build in *remote mode*. To do this, set the
 PYNQ can then be installed, **followed by** any other dependencies required
 for your project. The first command below installs the most recent version of
 PYNQ from GitHub. ``uv add`` installs packages into the project environment and
-records each them in the ``pyproject.toml``.
+records each of them in the ``pyproject.toml``.
 
 **Linux/macOS and Windows (PowerShell):**
 
@@ -112,12 +112,14 @@ PYNQ-HelloWorld is then ready to be installed:
    uv pip install --no-build-isolation pynq-helloworld
    uv run pynq get-notebooks pynq-helloworld -d ZCU104
 
-Step 5: Running Jupyter Labs
-----------------------------
+Step 5: Running JupyterLab
+--------------------------
 
-Before starting JupyterLab, store the IP address assigned to your board in an
-environment variable called ``PYNQ_REMOTE_DEVICES``. Running ``uv run jupyter-lab``
-starts the Jupyter session allowing you to interact with the board using PYNQ.remote.
+Before running any overlays, the IP address assigned to your board must be stored in an
+environment variable called ``PYNQ_REMOTE_DEVICES``. This can be configured directly in a
+Linux/macOS or PowerShell terminal, or in Python using the ``os`` module **before**
+running ``import pynq``. Running ``uv run jupyter-lab`` starts the Jupyter session, allowing
+you to interact with the board using PYNQ.remote.
 
 **Linux/macOS:**
 
@@ -135,19 +137,3 @@ starts the Jupyter session allowing you to interact with the board using PYNQ.re
 
 Navigate to the ``pynq-notebooks/pynq-helloworld`` directory and explore the
 ``resizer_pl.ipynb`` notebook.
-
-Connecting through an IDE
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-With PYNQ.remote, IDEs that support Python execution, such as VS Code and MATLAB,
-can also be used to run PYNQ overlays. Before importing ``pynq``, set
-``PYNQ_REMOTE_DEVICES`` to the board address:
-
-.. code-block:: python
-
-   import os
-   os.environ['PYNQ_REMOTE_DEVICES'] = "192.168.2.99"  # IP assigned to your board
-
-   from pynq import allocate, Overlay
-
-   overlay = Overlay("resizer.bit")
