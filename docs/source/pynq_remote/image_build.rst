@@ -27,18 +27,14 @@ Using the Docker-based build flow
    .. code-block:: bash
 
         git clone --recursive https://github.com/Xilinx/PYNQ.git
-        cd PYNQ
 
 #. Build the Docker image:
 
    .. code-block:: bash
 
-        cd sdbuild
-        docker build \
-          --build-arg USERNAME=$(whoami) \
-          --build-arg USER_UID=$(id -u) \
-          --build-arg USER_GID=$(id -g) \
-          -t pynqdock:latest .
+        cd PYNQ/sdbuild
+        docker build --build-arg USERNAME=$(whoami) --build-arg USER_UID=$(id -u) \
+          --build-arg USER_GID=$(id -g) -t pynqdock:latest .
         cd ..
 
 #. Set the paths to the AMD tools and licence, then build the remote image for
