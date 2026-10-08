@@ -6,7 +6,7 @@ On-target checks for PYNQ.remote images, installed by the
 ## On the board
 
 ```sh
-sudo remote-selftest
+sudo pynq-remote-selftest
 ```
 
 Runs modular bash checks from
