@@ -81,8 +81,9 @@ to use this feature.
 
       target_buffer = allocate((5,), dtype=np.uint32, target=ol.<memory name>)
 
-This feature is demonstrated in the `VCK190 Versal Memory notebook
-<https://github.com/Xilinx/PYNQ/blob/master/boards/VCK190/notebooks/versal_memories.ipynb>`__.
+This feature is demonstrated in the VCK190 `Versal Memories` 
+<https://github.com/Xilinx/PYNQ/blob/master/boards/VCK190/notebooks/versal_memories.ipynb>`__
+notebook.
 
 More information about memory allocation can be found in the :ref:`pynq-buffer`
 section in the library reference.
