@@ -63,6 +63,9 @@ docker run --init --rm \
   Ubuntu root filesystem from source. Leave them out to use prebuilt tarballs
   instead, placed in `sdbuild/prebuilt/` as `pynq_sdist.tar.gz` and
   `pynq_rootfs.<arch>.tar.gz`.
+* The [PYNQ.remote image build](https://pynq.readthedocs.io/en/latest/pynq_remote/image_build.html)
+  process is almost identical to that described above. The only exception is that the last line
+  is replaced with `bash -lc 'cd /workspace/sdbuild && make pynqremote BOARDS=ZCU104'`
 
 To work inside the container instead of running one command, add `-it` and replace
 the `bash -lc ...` argument with `/bin/bash`.
