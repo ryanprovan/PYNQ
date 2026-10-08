@@ -6,8 +6,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 DEPENDS = "protobuf grpc protobuf-native grpc-native xrt"
 
 # RFSoC services (xrfdc, xrfclk) are gated by the "rfsoc" PACKAGECONFIG.
-# The PYNQ Makefile writes a per-project bbappend that appends "rfsoc" to
-# PACKAGECONFIG when RFSoC_<board>=1.
+# build_edf_remote_rootfs.sh appends "rfsoc" to PACKAGECONFIG in auto.conf
+# when RFSoC_<board>=1.
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[rfsoc] = "-DRFSOC=ON,-DRFSOC=OFF,librfdc libmetal,librfdc libmetal"
 
